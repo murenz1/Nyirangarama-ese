@@ -2,6 +2,7 @@
 
 import Link from 'next/link'
 import { Star, ShoppingCart, Leaf, CheckCircle, Heart } from 'lucide-react'
+import { motion } from 'framer-motion'
 import { Product } from '@/data/types'
 import { clsx } from 'clsx'
 import { Button } from './Button'
@@ -26,13 +27,18 @@ export function ProductCard({ product, className }: ProductCardProps) {
   }
 
   return (
-    <div
+    <motion.div
       className={clsx(
         'group bg-white rounded-2xl shadow-soft hover:shadow-hover transition-all duration-300 overflow-hidden',
         className
       )}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
+      initial={{ opacity: 0, y: 20 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true }}
+      transition={{ duration: 0.4 }}
+      whileHover={{ y: -8 }}
     >
       <Link href={`/product/${product.id}`} className="block">
         <div className="relative aspect-square overflow-hidden bg-gray-100">
@@ -70,8 +76,14 @@ export function ProductCard({ product, className }: ProductCardProps) {
           )}
           {/* Quick Actions Overlay */}
           {isHovered && (
-            <div className="absolute top-4 right-4 flex flex-col gap-2">
-              <button
+            <motion.div
+              className="absolute top-4 right-4 flex flex-col gap-2"
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: 20 }}
+              transition={{ duration: 0.2 }}
+            >
+              <motion.button
                 onClick={(e) => {
                   e.preventDefault()
                   toggleItem(product)
@@ -81,10 +93,12 @@ export function ProductCard({ product, className }: ProductCardProps) {
                   inWishlist ? 'text-red-500' : 'text-gray-400 hover:text-red-500'
                 )}
                 title={inWishlist ? 'Remove from wishlist' : 'Add to wishlist'}
+                whileHover={{ scale: 1.15 }}
+                whileTap={{ scale: 0.9 }}
               >
                 <Heart className={clsx('w-5 h-5', inWishlist && 'fill-current')} />
-              </button>
-            </div>
+              </motion.button>
+            </motion.div>
           )}
         </div>
       </Link>
@@ -149,26 +163,34 @@ export function ProductCard({ product, className }: ProductCardProps) {
           </div>
         </Link>
 
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between mt-3">
           <div>
-            <span className="text-lg font-bold text-gray-900">
+            <p className="text-xl font-bold text-primary-600">
               {new Intl.NumberFormat('en-RW', {
                 style: 'currency',
                 currency: 'RWF',
                 minimumFractionDigits: 0,
               }).format(product.price)}
-            </span>
+            </p>
+            {product.inStock ? (
+              <p className="text-sm text-green-600 flex items-center gap-1 mt-1">
+                <CheckCircle className="w-4 h-4" />
+                In Stock
+              </p>
+            ) : (
+              <p className="text-sm text-red-500 mt-1">Out of Stock</p>
+            )}
           </div>
           <Button
             size="sm"
             onClick={handleAddToCart}
             disabled={!product.inStock}
-            className="p-2"
+            className="opacity-0 group-hover:opacity-100 transition-opacity"
           >
             <ShoppingCart className="w-4 h-4" />
           </Button>
         </div>
       </div>
-    </div>
+    </motion.div>
   )
 }

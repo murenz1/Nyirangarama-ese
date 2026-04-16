@@ -2,6 +2,7 @@
 
 import Link from 'next/link'
 import { useState, useEffect } from 'react'
+import { motion, AnimatePresence } from 'framer-motion'
 import { ShoppingCart, User, Menu, X, Search, ChevronDown, Heart, Truck } from 'lucide-react'
 import { useCartStore, useAuthStore, useWishlistStore } from '@/lib/store'
 import { Button } from './Button'
@@ -73,32 +74,52 @@ export function Navbar() {
           {/* Right Side Actions */}
           <div className="flex items-center gap-4">
             {/* Search */}
-            <button className="hidden sm:flex p-2 text-gray-600 hover:text-primary-600 transition-colors rounded-lg hover:bg-gray-100">
+            <motion.button 
+              className="hidden sm:flex p-2 text-gray-600 hover:text-primary-600 transition-colors rounded-lg hover:bg-gray-100"
+              whileHover={{ scale: 1.1 }}
+              whileTap={{ scale: 0.9 }}
+            >
               <Search className="w-5 h-5" />
-            </button>
+            </motion.button>
 
             {/* Wishlist */}
             <Link href="/wishlist" className="p-2 text-gray-600 hover:text-primary-600 transition-colors relative">
-              <Heart className="w-5 h-5" />
+              <motion.div whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }}>
+                <Heart className="w-5 h-5" />
+              </motion.div>
               {mounted && wishlistCount > 0 && (
-                <span className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white text-xs font-bold rounded-full flex items-center justify-center">
+                <motion.span 
+                  className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white text-xs font-bold rounded-full flex items-center justify-center"
+                  initial={{ scale: 0 }}
+                  animate={{ scale: 1 }}
+                  transition={{ type: "spring", stiffness: 500, damping: 15 }}
+                >
                   {wishlistCount}
-                </span>
+                </motion.span>
               )}
             </Link>
 
             {/* Track Order */}
             <Link href="/track" className="p-2 text-gray-600 hover:text-primary-600 transition-colors" title="Track Order">
-              <Truck className="w-5 h-5" />
+              <motion.div whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }}>
+                <Truck className="w-5 h-5" />
+              </motion.div>
             </Link>
 
             {/* Cart */}
             <Link href="/cart" className="p-2 text-gray-600 hover:text-primary-600 transition-colors relative">
-              <ShoppingCart className="w-5 h-5" />
+              <motion.div whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }}>
+                <ShoppingCart className="w-5 h-5" />
+              </motion.div>
               {mounted && totalItems > 0 && (
-                <span className="absolute -top-1 -right-1 w-5 h-5 bg-primary-600 text-white text-xs font-bold rounded-full flex items-center justify-center">
+                <motion.span 
+                  className="absolute -top-1 -right-1 w-5 h-5 bg-primary-600 text-white text-xs font-bold rounded-full flex items-center justify-center"
+                  initial={{ scale: 0 }}
+                  animate={{ scale: 1 }}
+                  transition={{ type: "spring", stiffness: 500, damping: 15 }}
+                >
                   {totalItems}
-                </span>
+                </motion.span>
               )}
             </Link>
 
