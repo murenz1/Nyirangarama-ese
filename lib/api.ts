@@ -1,7 +1,7 @@
 // API Service Layer for Nyirangarama Backend Integration
 // This file provides the structure for connecting to a backend API
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api'
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'https://nyirangarama-backend.vercel.app/api'
 
 // Generic fetch wrapper with error handling
 async function fetchAPI<T>(
