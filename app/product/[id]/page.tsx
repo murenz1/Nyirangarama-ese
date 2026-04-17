@@ -1,25 +1,67 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useParams } from 'next/navigation'
 import Link from 'next/link'
-import { Star, ShoppingCart, Minus, Plus, ArrowLeft, Heart, Share2, Check } from 'lucide-react'
+import { Star, ShoppingCart, Minus, Plus, ArrowLeft, Heart, Share2, Check, Loader2 } from 'lucide-react'
 import { Navbar } from '@/components/Navbar'
 import { Footer } from '@/components/Footer'
 import { Button } from '@/components/Button'
 import { ProductCard } from '@/components/ProductCard'
-import { getProductById, products } from '@/data/products'
+import { productsAPI } from '@/lib/api'
 import { useCartStore, useWishlistStore } from '@/lib/store'
+import { Product } from '@/data/types'
 import { clsx } from 'clsx'
 
 export default function ProductPage() {
   const params = useParams()
-  const product = getProductById(params.id as string)
+  const [product, setProduct] = useState<Product | null>(null)
+  const [relatedProducts, setRelatedProducts] = useState<Product[]>([])
+  const [isLoading, setIsLoading] = useState(true)
   const [quantity, setQuantity] = useState(1)
   const [isAdded, setIsAdded] = useState(false)
+
   const addItem = useCartStore((state) => state.addItem)
   const { isInWishlist, toggleItem } = useWishlistStore()
+
+  useEffect(() => {
+    async function fetchData() {
+      if (!params.id) return
+      try {
+        setIsLoading(true)
+        const data = await productsAPI.getById(params.id as string)
+        setProduct(data)
+
+        // Fetch related products (same category)
+        const productsRes = await productsAPI.getAll({ limit: 10 })
+        const filtered = productsRes.products.filter(
+          (p: Product) => (typeof p.category === 'string' ? p.category : p.category.id) ===
+            (typeof data.category === 'string' ? data.category : data.category.id) &&
+            p.id !== data.id
+        ).slice(0, 4)
+        setRelatedProducts(filtered)
+      } catch (error) {
+        console.error('Error fetching product:', error)
+      } finally {
+        setIsLoading(false)
+      }
+    }
+    fetchData()
+  }, [params.id])
+
   const inWishlist = product ? isInWishlist(product.id) : false
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex flex-col">
+        <Navbar />
+        <main className="flex-1 flex items-center justify-center">
+          <Loader2 className="w-12 h-12 text-primary-600 animate-spin" />
+        </main>
+        <Footer />
+      </div>
+    )
+  }
 
   if (!product) {
     return (
@@ -38,10 +80,6 @@ export default function ProductPage() {
       </div>
     )
   }
-
-  const relatedProducts = products
-    .filter((p) => p.category === product.category && p.id !== product.id)
-    .slice(0, 4)
 
   const handleQuantityChange = (delta: number) => {
     setQuantity((prev) => Math.max(1, prev + delta))
@@ -109,7 +147,7 @@ export default function ProductPage() {
                 <div className="flex-1">
                   <div className="flex items-center gap-2 mb-3">
                     <span className="text-sm text-primary-600 font-medium uppercase tracking-wider">
-                      {product.category}
+                      {typeof product.category === 'string' ? product.category : product.category.name}
                     </span>
                     {product.weight && (
                       <>
@@ -144,7 +182,7 @@ export default function ProductPage() {
                   </p>
 
                   {/* Ingredients */}
-                  {product.ingredients && (
+                  {product.ingredients && product.ingredients.length > 0 && (
                     <div className="mb-8">
                       <h3 className="font-semibold text-gray-900 mb-3">Ingredients</h3>
                       <div className="flex flex-wrap gap-2">

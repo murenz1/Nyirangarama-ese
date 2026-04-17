@@ -1,19 +1,41 @@
 'use client'
 
-import { useState, useMemo } from 'react'
-import { Search, SlidersHorizontal, X } from 'lucide-react'
+import { useState, useMemo, useEffect } from 'react'
+import { Search, SlidersHorizontal, X, Loader2 } from 'lucide-react'
 import { Navbar } from '@/components/Navbar'
 import { Footer } from '@/components/Footer'
 import { ProductCard } from '@/components/ProductCard'
 import { Button } from '@/components/Button'
-import { products } from '@/data/products'
-import { categories } from '@/data/categories'
+import { productsAPI } from '@/lib/api'
+import { Product, Category } from '@/data/types'
 import { clsx } from 'clsx'
 
 export default function ShopPage() {
   const [searchQuery, setSearchQuery] = useState('')
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null)
   const [isFilterOpen, setIsFilterOpen] = useState(false)
+  const [products, setProducts] = useState<Product[]>([])
+  const [categories, setCategories] = useState<Category[]>([])
+  const [isLoading, setIsLoading] = useState(true)
+
+  useEffect(() => {
+    async function fetchData() {
+      try {
+        setIsLoading(true)
+        const [productsRes, categoriesRes] = await Promise.all([
+          productsAPI.getAll({ limit: 100 }),
+          productsAPI.getCategories()
+        ])
+        setProducts(productsRes.products)
+        setCategories(categoriesRes)
+      } catch (error) {
+        console.error('Error fetching shop data:', error)
+      } finally {
+        setIsLoading(false)
+      }
+    }
+    fetchData()
+  }, [])
 
   const filteredProducts = useMemo(() => {
     return products.filter((product) => {
@@ -23,11 +45,14 @@ export default function ShopPage() {
         product.description.toLowerCase().includes(searchQuery.toLowerCase())
 
       const matchesCategory =
-        selectedCategory === null || product.category === selectedCategory
+        selectedCategory === null ||
+        (typeof product.category === 'string'
+          ? product.category === selectedCategory
+          : product.categoryId === selectedCategory || product.category.id === selectedCategory)
 
       return matchesSearch && matchesCategory
     })
-  }, [searchQuery, selectedCategory])
+  }, [searchQuery, selectedCategory, products])
 
   const clearFilters = () => {
     setSearchQuery('')
@@ -46,7 +71,7 @@ export default function ShopPage() {
               Our Products
             </h1>
             <p className="text-gray-600 max-w-2xl">
-              Discover our complete collection of authentic Rwandan products, 
+              Discover our complete collection of authentic Rwandan products,
               crafted with care and tradition.
             </p>
           </div>
@@ -166,7 +191,11 @@ export default function ShopPage() {
                 </select>
               </div>
 
-              {filteredProducts.length > 0 ? (
+              {isLoading ? (
+                <div className="flex items-center justify-center py-20">
+                  <Loader2 className="w-8 h-8 text-primary-600 animate-spin" />
+                </div>
+              ) : filteredProducts.length > 0 ? (
                 <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-6">
                   {filteredProducts.map((product) => (
                     <ProductCard key={product.id} product={product} />

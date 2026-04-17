@@ -25,13 +25,21 @@ export default function LoginPage() {
     setIsLoading(true)
 
     const success = await login(formData.email, formData.password)
-    
+
     if (success) {
-      router.push('/account')
+      // Small delay to ensure store is updated
+      setTimeout(() => {
+        const user = useAuthStore.getState().user
+        if (user?.role === 'admin') {
+          router.push('/admin')
+        } else {
+          router.push('/account')
+        }
+      }, 100)
     } else {
-      setError('Invalid email or password. Try: jean@example.com / password123')
+      setError('Invalid email or password.')
     }
-    
+
     setIsLoading(false)
   }
 

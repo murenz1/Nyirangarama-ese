@@ -3,7 +3,8 @@ export interface Product {
   name: string
   description: string
   price: number
-  category: string
+  category: string | { id: string; name: string }
+  categoryId?: string
   image: string
   rating: number
   reviews: number
@@ -23,6 +24,7 @@ export interface Product {
 export interface Category {
   id: string
   name: string
+  slug: string
   description: string
   image: string
   productCount: number
@@ -38,14 +40,12 @@ export interface Order {
   userId: string
   items: CartItem[]
   total: number
-  status: 'pending' | 'processing' | 'shipped' | 'delivered' | 'cancelled'
+  status: 'PENDING' | 'PROCESSING' | 'SHIPPED' | 'DELIVERED' | 'CANCELLED'
   createdAt: string
-  shippingAddress: {
-    fullName: string
-    phone: string
-    address: string
-    notes?: string
-  }
+  shippingName: string
+  shippingPhone: string
+  shippingAddress: string
+  shippingNotes?: string
   assignedDriver?: {
     id: string
     name: string

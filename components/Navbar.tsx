@@ -74,7 +74,7 @@ export function Navbar() {
           {/* Right Side Actions */}
           <div className="flex items-center gap-4">
             {/* Search */}
-            <motion.button 
+            <motion.button
               className="hidden sm:flex p-2 text-gray-600 hover:text-primary-600 transition-colors rounded-lg hover:bg-gray-100"
               whileHover={{ scale: 1.1 }}
               whileTap={{ scale: 0.9 }}
@@ -88,7 +88,7 @@ export function Navbar() {
                 <Heart className="w-5 h-5" />
               </motion.div>
               {mounted && wishlistCount > 0 && (
-                <motion.span 
+                <motion.span
                   className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white text-xs font-bold rounded-full flex items-center justify-center"
                   initial={{ scale: 0 }}
                   animate={{ scale: 1 }}
@@ -112,7 +112,7 @@ export function Navbar() {
                 <ShoppingCart className="w-5 h-5" />
               </motion.div>
               {mounted && totalItems > 0 && (
-                <motion.span 
+                <motion.span
                   className="absolute -top-1 -right-1 w-5 h-5 bg-primary-600 text-white text-xs font-bold rounded-full flex items-center justify-center"
                   initial={{ scale: 0 }}
                   animate={{ scale: 1 }}
@@ -148,6 +148,15 @@ export function Navbar() {
                     onClick={() => setIsUserMenuOpen(false)}
                   />
                   <div className="absolute right-0 top-full mt-2 w-48 bg-white rounded-xl shadow-lg border border-gray-100 py-1 z-20">
+                    {user?.role === 'admin' && (
+                      <Link
+                        href="/admin"
+                        onClick={() => setIsUserMenuOpen(false)}
+                        className="block px-4 py-2 text-sm text-primary-700 hover:bg-primary-50 font-semibold"
+                      >
+                        Admin Dashboard
+                      </Link>
+                    )}
                     <Link
                       href="/account"
                       onClick={() => setIsUserMenuOpen(false)}

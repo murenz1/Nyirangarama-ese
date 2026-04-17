@@ -9,7 +9,7 @@ async function fetchAPI<T>(
   options: RequestInit = {}
 ): Promise<T> {
   const url = `${API_BASE_URL}${endpoint}`
-  
+
   const config: RequestInit = {
     headers: {
       'Content-Type': 'application/json',
@@ -29,7 +29,7 @@ async function fetchAPI<T>(
 
   try {
     const response = await fetch(url, config)
-    
+
     if (!response.ok) {
       const error = await response.json().catch(() => ({}))
       throw new Error(error.message || `HTTP error! status: ${response.status}`)
@@ -40,7 +40,7 @@ async function fetchAPI<T>(
     if (contentType && contentType.includes('application/json')) {
       return await response.json()
     }
-    
+
     return null as T
   } catch (error) {
     console.error('API Error:', error)
@@ -109,7 +109,7 @@ export const productsAPI = {
     if (params?.search) queryParams.append('search', params.search)
     if (params?.page) queryParams.append('page', params.page.toString())
     if (params?.limit) queryParams.append('limit', params.limit.toString())
-    
+
     return fetchAPI<{ products: any[]; total: number; pages: number }>(
       `/products?${queryParams.toString()}`
     )
@@ -172,7 +172,7 @@ export const ordersAPI = {
     if (params?.status) queryParams.append('status', params.status)
     if (params?.page) queryParams.append('page', params.page.toString())
     if (params?.limit) queryParams.append('limit', params.limit.toString())
-    
+
     return fetchAPI<{ orders: any[]; total: number; pages: number }>(
       `/orders?${queryParams.toString()}`
     )
@@ -460,7 +460,14 @@ export const API = {
   analytics: analyticsAPI,
   inbox: inboxAPI,
   settings: settingsAPI,
+  categories: {
+    getAll: async () => fetchAPI<any[]>('/products/categories'),
+    create: async (data: any) => fetchAPI('/admin/categories', { method: 'POST', body: JSON.stringify(data) }),
+    update: async (id: string, data: any) => fetchAPI(`/admin/categories/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
+    delete: async (id: string) => fetchAPI(`/admin/categories/${id}`, { method: 'DELETE' }),
+  },
   wishlist: wishlistAPI,
 }
 
+export const adminAPI = API
 export default API

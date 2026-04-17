@@ -1,8 +1,10 @@
+'use client'
 import { create } from 'zustand'
 import { persist, createJSONStorage } from 'zustand/middleware'
-import { Product, CartItem, User, Order } from '@/data/types'
+import { Product, CartItem, User } from '@/data/types'
+import { authAPI, wishlistAPI } from './api'
 
-// Cart Store
+// ==================== CART STORE (client-side only) ====================
 interface CartState {
   items: CartItem[]
   addItem: (product: Product, quantity?: number) => void
@@ -83,56 +85,49 @@ export const useCartStore = create<CartState>()(
   )
 )
 
-// Auth Store
+// ==================== AUTH STORE (real API) ====================
 interface AuthState {
   user: User | null
   isAuthenticated: boolean
   login: (email: string, password: string) => Promise<boolean>
-  signup: (name: string, email: string, password: string) => Promise<boolean>
+  signup: (name: string, email: string, password: string, phone?: string) => Promise<boolean>
   logout: () => void
   updateUser: (userData: Partial<User>) => void
-}
-
-// Mock user data
-const MOCK_USER: User = {
-  id: 'user-1',
-  email: 'jean@example.com',
-  name: 'Jean Pierre',
-  phone: '+250 78 123 4567',
-  address: 'KG 123 St, Kigali, Rwanda',
-  role: 'customer',
-  createdAt: '2024-01-15T10:00:00Z',
+  updateProfile: (userData: Partial<User>) => Promise<boolean>
 }
 
 export const useAuthStore = create<AuthState>()(
   persist(
-    (set) => ({
+    (set, get) => ({
       user: null,
       isAuthenticated: false,
 
       login: async (email: string, password: string) => {
-        // Mock authentication - in real app, this would call an API
-        if (email === 'jean@example.com' && password === 'password123') {
-          set({ user: MOCK_USER, isAuthenticated: true })
+        try {
+          const { token, user } = await authAPI.login(email, password)
+          localStorage.setItem('auth-token', token)
+          set({ user, isAuthenticated: true })
           return true
+        } catch (error) {
+          console.error('Login failed:', error)
+          return false
         }
-        return false
       },
 
-      signup: async (name: string, email: string, password: string) => {
-        // Mock signup - in real app, this would call an API
-        const newUser: User = {
-          id: `user-${Date.now()}`,
-          email,
-          name,
-          role: 'customer',
-          createdAt: new Date().toISOString(),
+      signup: async (name: string, email: string, password: string, phone?: string) => {
+        try {
+          const { token, user } = await authAPI.signup(name, email, password, phone)
+          localStorage.setItem('auth-token', token)
+          set({ user, isAuthenticated: true })
+          return true
+        } catch (error) {
+          console.error('Signup failed:', error)
+          return false
         }
-        set({ user: newUser, isAuthenticated: true })
-        return true
       },
 
       logout: () => {
+        localStorage.removeItem('auth-token')
         set({ user: null, isAuthenticated: false })
       },
 
@@ -140,6 +135,17 @@ export const useAuthStore = create<AuthState>()(
         set((state) => ({
           user: state.user ? { ...state.user, ...userData } : null,
         }))
+      },
+
+      updateProfile: async (userData) => {
+        try {
+          const updatedUser = await authAPI.updateProfile(userData)
+          set({ user: updatedUser })
+          return true
+        } catch (error) {
+          console.error('Update profile failed:', error)
+          return false
+        }
       },
     }),
     {
@@ -149,7 +155,7 @@ export const useAuthStore = create<AuthState>()(
   )
 )
 
-// Wishlist Store
+// ==================== WISHLIST STORE (real API) ====================
 interface WishlistState {
   items: Product[]
   addItem: (product: Product) => void
@@ -157,6 +163,7 @@ interface WishlistState {
   isInWishlist: (productId: string) => boolean
   toggleItem: (product: Product) => void
   clearWishlist: () => void
+  syncWithServer: () => Promise<void>
 }
 
 export const useWishlistStore = create<WishlistState>()(
@@ -170,12 +177,21 @@ export const useWishlistStore = create<WishlistState>()(
           if (exists) return state
           return { items: [...state.items, product] }
         })
+        // Also sync to server if logged in
+        const token = typeof window !== 'undefined' ? localStorage.getItem('auth-token') : null
+        if (token) {
+          wishlistAPI.add(product.id).catch(console.error)
+        }
       },
 
       removeItem: (productId) => {
         set((state) => ({
           items: state.items.filter((item) => item.id !== productId),
         }))
+        const token = typeof window !== 'undefined' ? localStorage.getItem('auth-token') : null
+        if (token) {
+          wishlistAPI.remove(productId).catch(console.error)
+        }
       },
 
       isInWishlist: (productId) => {
@@ -193,6 +209,21 @@ export const useWishlistStore = create<WishlistState>()(
 
       clearWishlist: () => {
         set({ items: [] })
+        const token = typeof window !== 'undefined' ? localStorage.getItem('auth-token') : null
+        if (token) {
+          wishlistAPI.clear().catch(console.error)
+        }
+      },
+
+      syncWithServer: async () => {
+        try {
+          const token = typeof window !== 'undefined' ? localStorage.getItem('auth-token') : null
+          if (!token) return
+          const serverItems = await wishlistAPI.getAll()
+          set({ items: serverItems })
+        } catch (error) {
+          console.error('Failed to sync wishlist:', error)
+        }
       },
     }),
     {

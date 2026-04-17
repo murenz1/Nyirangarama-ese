@@ -107,7 +107,7 @@ export function ProductCard({ product, className }: ProductCardProps) {
         <Link href={`/product/${product.id}`} className="block">
           <div className="flex items-center justify-between mb-1">
             <p className="text-xs text-gray-500 uppercase tracking-wider">
-              {product.category}
+              {typeof product.category === 'string' ? product.category : product.category.name}
             </p>
             {product.weight && (
               <span className="text-xs bg-gray-100 text-gray-600 px-2 py-0.5 rounded-full font-medium">

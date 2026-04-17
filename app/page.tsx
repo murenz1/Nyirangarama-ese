@@ -1,25 +1,22 @@
 'use client'
 
+import { useState, useEffect } from 'react'
 import Link from 'next/link'
-import { ArrowRight, Leaf, Heart, Truck } from 'lucide-react'
+import { ArrowRight, Leaf, Heart, Truck, Loader2 } from 'lucide-react'
 import { motion } from 'framer-motion'
 import { Navbar } from '@/components/Navbar'
 import { Footer } from '@/components/Footer'
 import { ProductCard } from '@/components/ProductCard'
 import { CategoryCard } from '@/components/CategoryCard'
 import { Button } from '@/components/Button'
-import { categories } from '@/data/categories'
-import { getFeaturedProducts } from '@/data/products'
+import { productsAPI } from '@/lib/api'
+import { useAuthStore } from '@/lib/store'
+import { Product, Category } from '@/data/types'
 
 // Animation variants
 const fadeInUp = {
   initial: { opacity: 0, y: 30 },
   animate: { opacity: 1, y: 0 },
-}
-
-const fadeIn = {
-  initial: { opacity: 0 },
-  animate: { opacity: 1 },
 }
 
 const staggerContainer = {
@@ -30,23 +27,30 @@ const staggerContainer = {
   },
 }
 
-const scaleIn = {
-  initial: { opacity: 0, scale: 0.9 },
-  animate: { opacity: 1, scale: 1 },
-}
-
-const slideInLeft = {
-  initial: { opacity: 0, x: -50 },
-  animate: { opacity: 1, x: 0 },
-}
-
-const slideInRight = {
-  initial: { opacity: 0, x: 50 },
-  animate: { opacity: 1, x: 0 },
-}
-
 export default function HomePage() {
-  const featuredProducts = getFeaturedProducts().slice(0, 4)
+  const [featuredProducts, setFeaturedProducts] = useState<Product[]>([])
+  const [categories, setCategories] = useState<Category[]>([])
+  const [isLoading, setIsLoading] = useState(true)
+  const { user } = useAuthStore()
+
+  useEffect(() => {
+    async function fetchData() {
+      try {
+        setIsLoading(true)
+        const [productsRes, categoriesRes] = await Promise.all([
+          productsAPI.getAll({ limit: 4 }), // Just get first 4 for home
+          productsAPI.getCategories()
+        ])
+        setFeaturedProducts(productsRes.products)
+        setCategories(categoriesRes)
+      } catch (error) {
+        console.error('Error fetching home data:', error)
+      } finally {
+        setIsLoading(false)
+      }
+    }
+    fetchData()
+  }, [])
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -57,20 +61,20 @@ export default function HomePage() {
         <section className="relative bg-gradient-to-br from-sage-50 via-cream to-earth-100 py-20 lg:py-32">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="grid lg:grid-cols-2 gap-12 items-center">
-              <motion.div 
+              <motion.div
                 className="space-y-6"
                 initial="initial"
                 animate="animate"
                 variants={staggerContainer}
               >
-                <motion.span 
+                <motion.span
                   className="inline-block bg-sage-100 text-sage-700 px-4 py-1.5 rounded-full text-sm font-medium"
                   variants={fadeInUp}
                   transition={{ duration: 0.5 }}
                 >
                   SINA Rwanda - Nyirangarama
                 </motion.span>
-                <motion.h1 
+                <motion.h1
                   className="font-display text-4xl md:text-5xl lg:text-6xl font-bold text-gray-900 leading-tight"
                   variants={fadeInUp}
                   transition={{ duration: 0.6, delay: 0.1 }}
@@ -78,15 +82,15 @@ export default function HomePage() {
                   Taste the Authentic Flavors of{' '}
                   <span className="text-primary-600">Nyirangarama</span>
                 </motion.h1>
-                <motion.p 
+                <motion.p
                   className="text-lg text-gray-600 leading-relaxed max-w-lg"
                   variants={fadeInUp}
                   transition={{ duration: 0.6, delay: 0.2 }}
                 >
-                  ISO 22000:2018 Certified. Discover Agashya juices, Akabanga chili oil, 
+                  ISO 22000:2018 Certified. Discover Agashya juices, Akabanga chili oil,
                   natural honey, and traditional Rwandan products made with excellence since 1985.
                 </motion.p>
-                <motion.div 
+                <motion.div
                   className="flex flex-wrap gap-4"
                   variants={fadeInUp}
                   transition={{ duration: 0.6, delay: 0.3 }}
@@ -97,18 +101,25 @@ export default function HomePage() {
                       <ArrowRight className="w-5 h-5 ml-2" />
                     </Button>
                   </Link>
+                  {user?.role === 'admin' && (
+                    <Link href="/admin">
+                      <Button variant="outline" size="lg" className="hover:scale-105 transition-transform border-primary-600 text-primary-600">
+                        Admin Dashboard
+                      </Button>
+                    </Link>
+                  )}
                   <Link href="/about">
                     <Button variant="outline" size="lg" className="hover:scale-105 transition-transform">
                       Our Story
                     </Button>
                   </Link>
                 </motion.div>
-                <motion.div 
+                <motion.div
                   className="flex items-center gap-6 pt-4"
                   variants={fadeInUp}
                   transition={{ duration: 0.6, delay: 0.4 }}
                 >
-                  <motion.div 
+                  <motion.div
                     className="flex items-center gap-2"
                     whileHover={{ scale: 1.05, x: 5 }}
                     transition={{ type: "spring", stiffness: 400 }}
@@ -116,7 +127,7 @@ export default function HomePage() {
                     <Leaf className="w-5 h-5 text-sage-500" />
                     <span className="text-sm text-gray-600">100% Natural</span>
                   </motion.div>
-                  <motion.div 
+                  <motion.div
                     className="flex items-center gap-2"
                     whileHover={{ scale: 1.05, x: 5 }}
                     transition={{ type: "spring", stiffness: 400 }}
@@ -124,7 +135,7 @@ export default function HomePage() {
                     <Heart className="w-5 h-5 text-terracotta" />
                     <span className="text-sm text-gray-600">Made with Love</span>
                   </motion.div>
-                  <motion.div 
+                  <motion.div
                     className="flex items-center gap-2"
                     whileHover={{ scale: 1.05, x: 5 }}
                     transition={{ type: "spring", stiffness: 400 }}
@@ -134,25 +145,25 @@ export default function HomePage() {
                   </motion.div>
                 </motion.div>
               </motion.div>
-              <motion.div 
+              <motion.div
                 className="relative"
                 initial={{ opacity: 0, x: 50 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ duration: 0.8, delay: 0.2 }}
               >
-                <motion.div 
+                <motion.div
                   className="relative aspect-square rounded-3xl bg-gradient-to-br from-sage-200 to-earth-200 overflow-hidden"
                   whileHover={{ scale: 1.02 }}
                   transition={{ type: "spring", stiffness: 300 }}
                 >
-                  <img 
+                  <img
                     src="/images/hero/hero-main.jpg"
                     alt="Nyirangarama Products"
                     className="absolute inset-0 w-full h-full object-cover"
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent" />
                 </motion.div>
-                <motion.div 
+                <motion.div
                   className="absolute -bottom-6 -left-6 bg-white rounded-2xl shadow-lg p-4"
                   initial={{ opacity: 0, y: 20, scale: 0.8 }}
                   animate={{ opacity: 1, y: 0, scale: 1 }}
@@ -162,7 +173,7 @@ export default function HomePage() {
                   <p className="text-2xl font-bold text-gray-900">15+</p>
                   <p className="text-sm text-gray-600">Premium Products</p>
                 </motion.div>
-                <motion.div 
+                <motion.div
                   className="absolute -top-6 -right-6 bg-primary-600 text-white rounded-2xl shadow-lg p-4"
                   initial={{ opacity: 0, y: -20, scale: 0.8 }}
                   animate={{ opacity: 1, y: 0, scale: 1 }}
@@ -180,7 +191,7 @@ export default function HomePage() {
         {/* Categories Section */}
         <section className="py-16 lg:py-24 bg-white">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <motion.div 
+            <motion.div
               className="text-center mb-12"
               initial={{ opacity: 0, y: 30 }}
               whileInView={{ opacity: 1, y: 0 }}
@@ -195,39 +206,46 @@ export default function HomePage() {
                 each crafted with care and tradition.
               </p>
             </motion.div>
-            <motion.div 
-              className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6"
-              initial="initial"
-              whileInView="animate"
-              viewport={{ once: true }}
-              variants={{
-                animate: {
-                  transition: {
-                    staggerChildren: 0.1,
+
+            {isLoading ? (
+              <div className="flex items-center justify-center py-20">
+                <Loader2 className="w-8 h-8 text-primary-600 animate-spin" />
+              </div>
+            ) : (
+              <motion.div
+                className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6"
+                initial="initial"
+                whileInView="animate"
+                viewport={{ once: true }}
+                variants={{
+                  animate: {
+                    transition: {
+                      staggerChildren: 0.1,
+                    },
                   },
-                },
-              }}
-            >
-              {categories.map((category, index) => (
-                <motion.div
-                  key={category.id}
-                  variants={{
-                    initial: { opacity: 0, y: 30 },
-                    animate: { opacity: 1, y: 0 },
-                  }}
-                  transition={{ duration: 0.5, delay: index * 0.1 }}
-                >
-                  <CategoryCard category={category} />
-                </motion.div>
-              ))}
-            </motion.div>
+                }}
+              >
+                {categories.map((category, index) => (
+                  <motion.div
+                    key={category.id}
+                    variants={{
+                      initial: { opacity: 0, y: 30 },
+                      animate: { opacity: 1, y: 0 },
+                    }}
+                    transition={{ duration: 0.5, delay: index * 0.1 }}
+                  >
+                    <CategoryCard category={category} />
+                  </motion.div>
+                ))}
+              </motion.div>
+            )}
           </div>
         </section>
 
         {/* Featured Products Section */}
         <section className="py-16 lg:py-24 bg-earth-50">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <motion.div 
+            <motion.div
               className="flex flex-col md:flex-row md:items-end md:justify-between gap-4 mb-12"
               initial={{ opacity: 0, y: 30 }}
               whileInView={{ opacity: 1, y: 0 }}
@@ -249,32 +267,39 @@ export default function HomePage() {
                 </Button>
               </Link>
             </motion.div>
-            <motion.div 
-              className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6"
-              initial="initial"
-              whileInView="animate"
-              viewport={{ once: true }}
-              variants={{
-                animate: {
-                  transition: {
-                    staggerChildren: 0.1,
+
+            {isLoading ? (
+              <div className="flex items-center justify-center py-20">
+                <Loader2 className="w-8 h-8 text-primary-600 animate-spin" />
+              </div>
+            ) : (
+              <motion.div
+                className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6"
+                initial="initial"
+                whileInView="animate"
+                viewport={{ once: true }}
+                variants={{
+                  animate: {
+                    transition: {
+                      staggerChildren: 0.1,
+                    },
                   },
-                },
-              }}
-            >
-              {featuredProducts.map((product, index) => (
-                <motion.div
-                  key={product.id}
-                  variants={{
-                    initial: { opacity: 0, y: 30 },
-                    animate: { opacity: 1, y: 0 },
-                  }}
-                  transition={{ duration: 0.5, delay: index * 0.1 }}
-                >
-                  <ProductCard product={product} />
-                </motion.div>
-              ))}
-            </motion.div>
+                }}
+              >
+                {featuredProducts.map((product, index) => (
+                  <motion.div
+                    key={product.id}
+                    variants={{
+                      initial: { opacity: 0, y: 30 },
+                      animate: { opacity: 1, y: 0 },
+                    }}
+                    transition={{ duration: 0.5, delay: index * 0.1 }}
+                  >
+                    <ProductCard product={product} />
+                  </motion.div>
+                ))}
+              </motion.div>
+            )}
           </div>
         </section>
 
@@ -282,7 +307,7 @@ export default function HomePage() {
         <section className="py-16 lg:py-24 bg-white">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="grid lg:grid-cols-2 gap-12 items-center">
-              <motion.div 
+              <motion.div
                 className="order-2 lg:order-1"
                 initial={{ opacity: 0, x: -50 }}
                 whileInView={{ opacity: 1, x: 0 }}
@@ -290,7 +315,7 @@ export default function HomePage() {
                 transition={{ duration: 0.8 }}
               >
                 <div className="relative">
-                  <motion.div 
+                  <motion.div
                     className="aspect-[4/3] rounded-3xl bg-gradient-to-br from-earth-200 to-sage-200 overflow-hidden"
                     whileHover={{ scale: 1.02 }}
                     transition={{ type: "spring", stiffness: 300 }}
@@ -302,7 +327,7 @@ export default function HomePage() {
                     />
                     <div className="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent" />
                   </motion.div>
-                  <motion.div 
+                  <motion.div
                     className="absolute -bottom-8 -right-8 w-48 h-48 rounded-3xl bg-primary-100 flex items-center justify-center"
                     initial={{ opacity: 0, scale: 0.8 }}
                     whileInView={{ opacity: 1, scale: 1 }}
@@ -317,16 +342,15 @@ export default function HomePage() {
                   </motion.div>
                 </div>
               </motion.div>
-              <motion.div 
+              <motion.div
                 className="order-1 lg:order-2 space-y-6"
                 initial={{ opacity: 0, x: 50 }}
                 whileInView={{ opacity: 1, x: 0 }}
                 viewport={{ once: true }}
                 transition={{ duration: 0.8 }}
               >
-                <motion.span 
+                <motion.span
                   className="inline-block bg-primary-100 text-primary-700 px-4 py-1.5 rounded-full text-sm font-medium"
-                  variants={fadeInUp}
                 >
                   About SINA Rwanda
                 </motion.span>
@@ -366,7 +390,7 @@ export default function HomePage() {
                     We are ISO 22000:2018 Certified company with Halal certification.
                   </motion.p>
                 </div>
-                <motion.div 
+                <motion.div
                   className="flex flex-wrap gap-8 pt-4"
                   initial={{ opacity: 0, y: 20 }}
                   whileInView={{ opacity: 1, y: 0 }}
@@ -394,7 +418,7 @@ export default function HomePage() {
         {/* Product Gallery Section */}
         <section className="py-16 lg:py-24 bg-earth-50">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <motion.div 
+            <motion.div
               className="text-center mb-12"
               initial={{ opacity: 0, y: 30 }}
               whileInView={{ opacity: 1, y: 0 }}
@@ -409,7 +433,7 @@ export default function HomePage() {
                 to spicy chili oil and natural honey.
               </p>
             </motion.div>
-            <motion.div 
+            <motion.div
               className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4"
               initial="initial"
               whileInView="animate"
@@ -453,14 +477,14 @@ export default function HomePage() {
 
         {/* Newsletter Section */}
         <section className="py-16 lg:py-24 bg-sage-50">
-          <motion.div 
+          <motion.div
             className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center"
             initial={{ opacity: 0, y: 30 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ duration: 0.6 }}
           >
-            <motion.h2 
+            <motion.h2
               className="font-display text-3xl md:text-4xl font-bold text-gray-900 mb-4"
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
@@ -469,7 +493,7 @@ export default function HomePage() {
             >
               Stay Updated
             </motion.h2>
-            <motion.p 
+            <motion.p
               className="text-gray-600 mb-8 max-w-xl mx-auto"
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
@@ -479,7 +503,7 @@ export default function HomePage() {
               Subscribe to our newsletter for exclusive offers, new product announcements,
               and stories from Rwanda.
             </motion.p>
-            <motion.form 
+            <motion.form
               className="flex flex-col sm:flex-row gap-3 max-w-md mx-auto"
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
