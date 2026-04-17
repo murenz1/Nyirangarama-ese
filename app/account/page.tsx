@@ -1,16 +1,17 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { User, Package, MapPin, LogOut, Edit2, Check } from 'lucide-react'
+import { User, Package, MapPin, LogOut, Edit2, Check, Loader2 } from 'lucide-react'
 import { Navbar } from '@/components/Navbar'
 import { Footer } from '@/components/Footer'
 import { Button } from '@/components/Button'
 import { Input } from '@/components/Input'
 import { OrderCard } from '@/components/OrderCard'
 import { useAuthStore } from '@/lib/store'
-import { mockOrders } from '@/data/orders'
+import { ordersAPI } from '@/lib/api'
+import { Order } from '@/data/types'
 
 export default function AccountPage() {
   const router = useRouter()
@@ -18,6 +19,8 @@ export default function AccountPage() {
   const [activeTab, setActiveTab] = useState('profile')
   const [isEditing, setIsEditing] = useState(false)
   const [isSaving, setIsSaving] = useState(false)
+  const [userOrders, setUserOrders] = useState<Order[]>([])
+  const [isLoadingOrders, setIsLoadingOrders] = useState(true)
   const [formData, setFormData] = useState({
     name: user?.name || '',
     email: user?.email || '',
@@ -25,7 +28,21 @@ export default function AccountPage() {
     address: user?.address || '',
   })
 
-  const userOrders = mockOrders.filter((order) => order.userId === user?.id)
+  useEffect(() => {
+    async function fetchOrders() {
+      if (!isAuthenticated) return
+      try {
+        setIsLoadingOrders(true)
+        const orders = await ordersAPI.getUserOrders()
+        setUserOrders(orders)
+      } catch (error) {
+        console.error('Error fetching orders:', error)
+      } finally {
+        setIsLoadingOrders(false)
+      }
+    }
+    fetchOrders()
+  }, [isAuthenticated])
 
   const handleLogout = () => {
     logout()
@@ -224,7 +241,11 @@ export default function AccountPage() {
                   <h2 className="font-display text-xl font-bold text-gray-900">
                     Order History
                   </h2>
-                  {userOrders.length > 0 ? (
+                  {isLoadingOrders ? (
+                    <div className="flex items-center justify-center py-12">
+                      <Loader2 className="w-8 h-8 text-primary-600 animate-spin" />
+                    </div>
+                  ) : userOrders.length > 0 ? (
                     <div className="space-y-4">
                       {userOrders.map((order) => (
                         <OrderCard key={order.id} order={order} />
