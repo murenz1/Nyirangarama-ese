@@ -28,6 +28,7 @@ async function fetchAPI<T>(
   }
 
   try {
+    console.log(`[API] Fetching: ${url}`)
     const response = await fetch(url, config)
 
     if (!response.ok) {
@@ -42,8 +43,12 @@ async function fetchAPI<T>(
     }
 
     return null as T
-  } catch (error) {
-    console.error('API Error:', error)
+  } catch (error: any) {
+    if (error.name === 'TypeError' && error.message === 'Failed to fetch') {
+      console.error(`[API] CORS or Network Error - Check if backend CORS is configured for:`, API_BASE_URL)
+      console.error(`[API] Backend needs to allow origin: http://localhost:3000`)
+    }
+    console.error('[API] Error:', error)
     throw error
   }
 }

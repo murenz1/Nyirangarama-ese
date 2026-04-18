@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { User, Package, MapPin, LogOut, Edit2, Check, Loader2 } from 'lucide-react'
@@ -236,7 +237,11 @@ export default function AccountPage() {
                   <h2 className="font-display text-xl font-bold text-gray-900">
                     Order History
                   </h2>
-                  {userOrders.length > 0 ? (
+                  {isLoadingOrders ? (
+                    <div className="flex items-center justify-center py-12">
+                      <Loader2 className="w-8 h-8 text-primary-600 animate-spin" />
+                    </div>
+                  ) : userOrders.length > 0 ? (
                     <div className="space-y-4">
                       {userOrders.map((order) => (
                         <OrderCard key={order.id} order={order} />
