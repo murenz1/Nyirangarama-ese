@@ -101,13 +101,7 @@ export default function HomePage() {
                       <ArrowRight className="w-5 h-5 ml-2" />
                     </Button>
                   </Link>
-                  {user?.role === 'admin' && (
-                    <Link href="/admin">
-                      <Button variant="outline" size="lg" className="hover:scale-105 transition-transform border-primary-600 text-primary-600">
-                        Admin Dashboard
-                      </Button>
-                    </Link>
-                  )}
+
                   <Link href="/about">
                     <Button variant="outline" size="lg" className="hover:scale-105 transition-transform">
                       Our Story

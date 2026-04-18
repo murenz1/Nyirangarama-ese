@@ -1,23 +1,27 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import Link from 'next/link'
-import { useRouter } from 'next/navigation'
-import { User, Package, MapPin, LogOut, Edit2, Check } from 'lucide-react'
+import { useRouter, useSearchParams } from 'next/navigation'
+import { User, Package, MapPin, LogOut, Edit2, Check, Loader2 } from 'lucide-react'
 import { Navbar } from '@/components/Navbar'
 import { Footer } from '@/components/Footer'
 import { Button } from '@/components/Button'
 import { Input } from '@/components/Input'
 import { OrderCard } from '@/components/OrderCard'
 import { useAuthStore } from '@/lib/store'
-import { mockOrders } from '@/data/orders'
+import { ordersAPI } from '@/lib/api'
 
 export default function AccountPage() {
   const router = useRouter()
+  const searchParams = useSearchParams()
   const { user, isAuthenticated, logout, updateUser } = useAuthStore()
-  const [activeTab, setActiveTab] = useState('profile')
+  const [activeTab, setActiveTab] = useState(searchParams.get('tab') || 'profile')
   const [isEditing, setIsEditing] = useState(false)
   const [isSaving, setIsSaving] = useState(false)
+  const [userOrders, setUserOrders] = useState<any[]>([])
+  const [isLoadingOrders, setIsLoadingOrders] = useState(false)
+
   const [formData, setFormData] = useState({
     name: user?.name || '',
     email: user?.email || '',
@@ -25,7 +29,16 @@ export default function AccountPage() {
     address: user?.address || '',
   })
 
-  const userOrders = mockOrders.filter((order) => order.userId === user?.id)
+  // Fetch real orders on mount
+  useEffect(() => {
+    if (isAuthenticated) {
+      setIsLoadingOrders(true)
+      ordersAPI.getUserOrders()
+        .then((orders) => setUserOrders(orders))
+        .catch(err => console.error("Failed to load orders:", err))
+        .finally(() => setIsLoadingOrders(false))
+    }
+  }, [isAuthenticated])
 
   const handleLogout = () => {
     logout()
@@ -92,11 +105,10 @@ export default function AccountPage() {
                       <button
                         key={tab.id}
                         onClick={() => setActiveTab(tab.id)}
-                        className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-colors ${
-                          activeTab === tab.id
-                            ? 'bg-primary-50 text-primary-700 font-medium'
-                            : 'text-gray-600 hover:bg-gray-50'
-                        }`}
+                        className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-colors ${activeTab === tab.id
+                          ? 'bg-primary-50 text-primary-700 font-medium'
+                          : 'text-gray-600 hover:bg-gray-50'
+                          }`}
                       >
                         <Icon className="w-5 h-5" />
                         {tab.label}

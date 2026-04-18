@@ -7,6 +7,8 @@ import { Button } from '@/components/Button'
 import { Input } from '@/components/Input'
 import { MapPin, Phone, Mail, Clock, Send } from 'lucide-react'
 
+import { inboxAPI } from '@/lib/api'
+
 export default function ContactPage() {
   const [formData, setFormData] = useState({
     name: '',
@@ -15,11 +17,21 @@ export default function ContactPage() {
     message: '',
   })
   const [isSubmitted, setIsSubmitted] = useState(false)
+  const [isSubmitting, setIsSubmitting] = useState(false)
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    setIsSubmitted(true)
-    setTimeout(() => setIsSubmitted(false), 3000)
+    setIsSubmitting(true)
+    try {
+      await inboxAPI.create(formData)
+      setIsSubmitted(true)
+      setFormData({ name: '', email: '', subject: '', message: '' })
+      setTimeout(() => setIsSubmitted(false), 5000)
+    } catch (error) {
+      alert('Failed to send message. Please try again.')
+    } finally {
+      setIsSubmitting(false)
+    }
   }
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
@@ -38,7 +50,7 @@ export default function ContactPage() {
               Contact Us
             </h1>
             <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-              We would love to hear from you. Reach out to us for any inquiries, 
+              We would love to hear from you. Reach out to us for any inquiries,
               feedback, or partnership opportunities.
             </p>
           </div>

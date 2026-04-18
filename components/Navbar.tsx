@@ -3,14 +3,18 @@
 import Link from 'next/link'
 import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { ShoppingCart, User, Menu, X, Search, ChevronDown, Heart, Truck } from 'lucide-react'
+import { ShoppingCart, User, Menu, X, Search, ChevronDown, Heart, Truck, ArrowRight } from 'lucide-react'
 import { useCartStore, useAuthStore, useWishlistStore } from '@/lib/store'
+import { useRouter } from 'next/navigation'
 import { Button } from './Button'
 
 export function Navbar() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false)
+  const [isSearchOpen, setIsSearchOpen] = useState(false)
+  const [searchQuery, setSearchQuery] = useState('')
   const [mounted, setMounted] = useState(false)
+  const router = useRouter()
   const totalItems = useCartStore((state) => state.getTotalItems())
   const wishlistCount = useWishlistStore((state) => state.items.length)
   const { user, isAuthenticated, logout } = useAuthStore()
@@ -22,6 +26,15 @@ export function Navbar() {
   const handleLogout = () => {
     logout()
     setIsUserMenuOpen(false)
+  }
+
+  const handleSearch = (e: React.FormEvent) => {
+    e.preventDefault()
+    if (searchQuery.trim()) {
+      router.push(`/shop?search=${encodeURIComponent(searchQuery.trim())}`)
+      setIsSearchOpen(false)
+      setSearchQuery('')
+    }
   }
 
   return (
@@ -74,13 +87,54 @@ export function Navbar() {
           {/* Right Side Actions */}
           <div className="flex items-center gap-4">
             {/* Search */}
-            <motion.button
-              className="hidden sm:flex p-2 text-gray-600 hover:text-primary-600 transition-colors rounded-lg hover:bg-gray-100"
-              whileHover={{ scale: 1.1 }}
-              whileTap={{ scale: 0.9 }}
-            >
-              <Search className="w-5 h-5" />
-            </motion.button>
+            <div className="relative flex items-center">
+              <AnimatePresence>
+                {isSearchOpen && (
+                  <motion.form
+                    initial={{ width: 0, opacity: 0 }}
+                    animate={{ width: 240, opacity: 1 }}
+                    exit={{ width: 0, opacity: 0 }}
+                    onSubmit={handleSearch}
+                    className="absolute right-0 flex items-center"
+                  >
+                    <input
+                      type="text"
+                      placeholder="Search products..."
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      autoFocus
+                      className="w-full bg-gray-100 border-none rounded-full px-4 py-2 text-sm focus:ring-2 focus:ring-primary-500/20 outline-none pr-10"
+                    />
+                    <button type="submit" className="absolute right-3 text-gray-400 hover:text-primary-600">
+                      <ArrowRight className="w-4 h-4" />
+                    </button>
+                  </motion.form>
+                )}
+              </AnimatePresence>
+
+              {!isSearchOpen && (
+                <motion.button
+                  onClick={() => setIsSearchOpen(true)}
+                  className="p-2 text-gray-600 hover:text-primary-600 transition-colors rounded-lg hover:bg-gray-100"
+                  whileHover={{ scale: 1.1 }}
+                  whileTap={{ scale: 0.9 }}
+                >
+                  <Search className="w-5 h-5" />
+                </motion.button>
+              )}
+
+              {isSearchOpen && (
+                <button
+                  onClick={() => {
+                    setIsSearchOpen(false)
+                    setSearchQuery('')
+                  }}
+                  className="ml-2 p-1 text-gray-400 hover:text-red-500 z-10"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              )}
+            </div>
 
             {/* Wishlist */}
             <Link href="/wishlist" className="p-2 text-gray-600 hover:text-primary-600 transition-colors relative">
@@ -99,12 +153,7 @@ export function Navbar() {
               )}
             </Link>
 
-            {/* Track Order */}
-            <Link href="/track" className="p-2 text-gray-600 hover:text-primary-600 transition-colors" title="Track Order">
-              <motion.div whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }}>
-                <Truck className="w-5 h-5" />
-              </motion.div>
-            </Link>
+
 
             {/* Cart */}
             <Link href="/cart" className="p-2 text-gray-600 hover:text-primary-600 transition-colors relative">

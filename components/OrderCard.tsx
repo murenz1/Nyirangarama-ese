@@ -10,24 +10,24 @@ interface OrderCardProps {
 }
 
 const statusIcons = {
-  pending: Clock,
-  processing: Package,
-  shipped: Truck,
-  delivered: CheckCircle,
-  cancelled: XCircle,
+  PENDING: Clock,
+  PROCESSING: Package,
+  SHIPPED: Truck,
+  DELIVERED: CheckCircle,
+  CANCELLED: XCircle,
 }
 
 const statusLabels = {
-  pending: 'Pending',
-  processing: 'Processing',
-  shipped: 'Shipped',
-  delivered: 'Delivered',
-  cancelled: 'Cancelled',
+  PENDING: 'Pending',
+  PROCESSING: 'Processing',
+  SHIPPED: 'Shipped',
+  DELIVERED: 'Delivered',
+  CANCELLED: 'Cancelled',
 }
 
 export function OrderCard({ order }: OrderCardProps) {
   const [isExpanded, setIsExpanded] = useState(false)
-  const StatusIcon = statusIcons[order.status]
+  const StatusIcon = statusIcons[order.status] || Clock
 
   return (
     <div className="bg-white rounded-2xl shadow-soft overflow-hidden">
@@ -43,7 +43,7 @@ export function OrderCard({ order }: OrderCardProps) {
             )}`}
           >
             <StatusIcon className="w-4 h-4" />
-            {statusLabels[order.status]}
+            {statusLabels[order.status] || order.status}
           </span>
         </div>
 
@@ -95,13 +95,13 @@ export function OrderCard({ order }: OrderCardProps) {
         </div>
 
         <div className="mt-4 pt-4 border-t border-gray-100">
-          <p className="text-sm text-gray-500 mb-2">Shipping Address</p>
+          <p className="text-sm text-gray-500 mb-2">Shipping Information</p>
           <div className="text-sm text-gray-700">
-            <p className="font-medium">{order.shippingAddress.fullName}</p>
-            <p>{order.shippingAddress.phone}</p>
-            <p>{order.shippingAddress.address}</p>
-            {order.shippingAddress.notes && (
-              <p className="text-gray-500 mt-1">Note: {order.shippingAddress.notes}</p>
+            <p className="font-medium">{order.shippingName}</p>
+            <p>{order.shippingPhone}</p>
+            <p>{order.shippingAddress}</p>
+            {order.shippingNotes && (
+              <p className="text-gray-500 mt-1">Note: {order.shippingNotes}</p>
             )}
           </div>
         </div>

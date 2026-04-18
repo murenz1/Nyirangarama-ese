@@ -24,6 +24,7 @@ import { Button } from '@/components/Button'
 import { adminAPI } from '@/lib/api'
 import { Order } from '@/data/types'
 import { clsx } from 'clsx'
+import { Toast, ToastType } from '@/components/Toast'
 
 const statusOptions = ['all', 'PENDING', 'PROCESSING', 'SHIPPED', 'DELIVERED', 'CANCELLED'] as const
 type OrderStatus = typeof statusOptions[number]
@@ -35,11 +36,28 @@ export default function OrdersPage() {
   const [expandedOrder, setExpandedOrder] = useState<string | null>(null)
   const [editingStatus, setEditingStatus] = useState<string | null>(null)
   const [orders, setOrders] = useState<Order[]>([])
+  const [drivers, setDrivers] = useState<any[]>([])
   const [isLoading, setIsLoading] = useState(true)
+  const [isAssigning, setIsAssigning] = useState<string | null>(null)
+  const [toast, setToast] = useState<{ message: string; type: ToastType } | null>(null)
+
+  const showToast = (message: string, type: ToastType = 'success') => {
+    setToast({ message, type })
+  }
 
   useEffect(() => {
     fetchOrders()
+    fetchDrivers()
   }, [])
+
+  async function fetchDrivers() {
+    try {
+      const data = await adminAPI.drivers.getAll()
+      setDrivers(data)
+    } catch (error) {
+      console.error('Error fetching drivers:', error)
+    }
+  }
 
   async function fetchOrders() {
     try {
@@ -58,8 +76,27 @@ export default function OrdersPage() {
       await adminAPI.orders.updateStatus(orderId, status)
       setOrders(prev => prev.map(o => o.id === orderId ? { ...o, status: status as any } : o))
       setEditingStatus(null)
+      showToast(`Order status updated to ${status}`, 'success')
+      // Refresh drivers since status might have updated automatically
+      fetchDrivers()
     } catch (error) {
-      alert('Failed to update status')
+      showToast('Failed to update status', 'error')
+    }
+  }
+
+  async function assignDriver(orderId: string, driverId: string) {
+    if (!driverId) return
+    try {
+      setIsAssigning(orderId)
+      await adminAPI.orders.assignDriver(orderId, driverId)
+      const updatedOrders = await adminAPI.orders.getAll()
+      setOrders(updatedOrders.orders)
+      setIsAssigning(null)
+      fetchDrivers() // Update driver list statuses
+      showToast('Driver assigned successfully', 'success')
+    } catch (error) {
+      showToast('Failed to assign driver', 'error')
+      setIsAssigning(null)
     }
   }
 
@@ -251,10 +288,38 @@ export default function OrdersPage() {
                     <div className="grid md:grid-cols-2 gap-6">
                       <div>
                         <h4 className="font-semibold text-gray-900 mb-2">Shipping Details</h4>
-                        <div className="text-sm space-y-1 text-gray-600">
+                        <div className="text-sm space-y-1 text-gray-600 mb-4">
                           <p><span className="font-medium">Phone:</span> {order.shippingPhone}</p>
                           <p><span className="font-medium">Address:</span> {order.shippingAddress}</p>
                         </div>
+
+                        <h4 className="font-semibold text-gray-900 mb-2">Driver Assignment</h4>
+                        <div className="flex items-center gap-3">
+                          <select
+                            className="flex-1 bg-white border border-gray-200 rounded-lg px-3 py-2 text-sm"
+                            value={order.assignedDriver?.id || ''}
+                            onChange={(e) => assignDriver(order.id, e.target.value)}
+                            disabled={isAssigning === order.id}
+                          >
+                            <option value="">Select a driver</option>
+                            {[...drivers].sort((a, b) => {
+                              if (a.status === 'AVAILABLE' && b.status !== 'AVAILABLE') return -1
+                              if (a.status !== 'AVAILABLE' && b.status === 'AVAILABLE') return 1
+                              return 0
+                            }).map(driver => (
+                              <option key={driver.id} value={driver.id}>
+                                {driver.status === 'AVAILABLE' ? '🟢' : '🔴'} {driver.name} ({driver.status})
+                              </option>
+                            ))}
+                          </select>
+                          {isAssigning === order.id && <Loader2 className="w-4 h-4 animate-spin text-primary-600" />}
+                        </div>
+                        {order.assignedDriver && (
+                          <div className="mt-2 text-xs text-primary-600 flex items-center gap-1">
+                            <Truck className="w-3 h-3" />
+                            Assigned to {order.assignedDriver.name}
+                          </div>
+                        )}
                       </div>
                       <div>
                         <h4 className="font-semibold text-gray-900 mb-2">Order Items</h4>
@@ -281,6 +346,14 @@ export default function OrdersPage() {
             )}
           </div>
         </div>
+
+        {toast && (
+          <Toast
+            message={toast.message}
+            type={toast.type}
+            onClose={() => setToast(null)}
+          />
+        )}
       </main>
     </div>
   )

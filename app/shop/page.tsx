@@ -1,6 +1,7 @@
 'use client'
 
-import { useState, useMemo, useEffect } from 'react'
+import { useState, useMemo, useEffect, Suspense } from 'react'
+import { useSearchParams } from 'next/navigation'
 import { Search, SlidersHorizontal, X, Loader2 } from 'lucide-react'
 import { Navbar } from '@/components/Navbar'
 import { Footer } from '@/components/Footer'
@@ -10,8 +11,10 @@ import { productsAPI } from '@/lib/api'
 import { Product, Category } from '@/data/types'
 import { clsx } from 'clsx'
 
-export default function ShopPage() {
-  const [searchQuery, setSearchQuery] = useState('')
+function ShopContent() {
+  const searchParams = useSearchParams()
+  const initialSearch = searchParams.get('search') || ''
+  const [searchQuery, setSearchQuery] = useState(initialSearch)
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null)
   const [isFilterOpen, setIsFilterOpen] = useState(false)
   const [products, setProducts] = useState<Product[]>([])
@@ -222,5 +225,17 @@ export default function ShopPage() {
 
       <Footer />
     </div>
+  )
+}
+
+export default function ShopPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen flex items-center justify-center">
+        <Loader2 className="w-8 h-8 text-primary-600 animate-spin" />
+      </div>
+    }>
+      <ShopContent />
+    </Suspense>
   )
 }

@@ -96,7 +96,7 @@ export default function CheckoutPage() {
             <p className="text-gray-600 mb-8">Thank you for your order. We will process it shortly.</p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Link href="/shop"><Button variant="outline">Continue Shopping</Button></Link>
-              <Link href="/account"><Button>View Orders</Button></Link>
+              <Link href="/account?tab=orders"><Button>View Orders</Button></Link>
             </div>
           </div>
         </main>

@@ -38,14 +38,12 @@ export const mockOrders: Order[] = [
       },
     ],
     total: 23000,
-    status: 'delivered',
+    status: 'DELIVERED',
     createdAt: '2024-03-15T10:30:00Z',
-    shippingAddress: {
-      fullName: 'Jean Pierre',
-      phone: '+250 788 305 558',
-      address: 'Nyirangarama, Rulindo District, Rwanda',
-      notes: 'Leave at the gate',
-    },
+    shippingName: 'Jean Pierre',
+    shippingPhone: '+250 788 305 558',
+    shippingAddress: 'Nyirangarama, Rulindo District, Rwanda',
+    shippingNotes: 'Leave at the gate',
   },
   {
     id: 'ORD-002',
@@ -83,13 +81,11 @@ export const mockOrders: Order[] = [
       },
     ],
     total: 17000,
-    status: 'processing',
+    status: 'PROCESSING',
     createdAt: '2024-04-10T14:20:00Z',
-    shippingAddress: {
-      fullName: 'Jean Pierre',
-      phone: '+250 788 305 558',
-      address: 'Nyirangarama, Rulindo District, Rwanda',
-    },
+    shippingName: 'Jean Pierre',
+    shippingPhone: '+250 788 305 558',
+    shippingAddress: 'Nyirangarama, Rulindo District, Rwanda',
   },
   {
     id: 'ORD-003',
@@ -127,13 +123,11 @@ export const mockOrders: Order[] = [
       },
     ],
     total: 22000,
-    status: 'shipped',
+    status: 'SHIPPED',
     createdAt: '2024-04-12T09:15:00Z',
-    shippingAddress: {
-      fullName: 'Jean Pierre',
-      phone: '+250 788 305 558',
-      address: 'Nyirangarama, Rulindo District, Rwanda',
-    },
+    shippingName: 'Jean Pierre',
+    shippingPhone: '+250 788 305 558',
+    shippingAddress: 'Nyirangarama, Rulindo District, Rwanda',
   },
   {
     id: 'ORD-004',
@@ -186,14 +180,12 @@ export const mockOrders: Order[] = [
       },
     ],
     total: 18000,
-    status: 'pending',
+    status: 'PENDING',
     createdAt: '2024-04-14T16:45:00Z',
-    shippingAddress: {
-      fullName: 'Jean Pierre',
-      phone: '+250 788 305 558',
-      address: 'Nyirangarama, Rulindo District, Rwanda',
-      notes: 'Call on arrival',
-    },
+    shippingName: 'Jean Pierre',
+    shippingPhone: '+250 788 305 558',
+    shippingAddress: 'Nyirangarama, Rulindo District, Rwanda',
+    shippingNotes: 'Call on arrival',
   },
 ]
 
@@ -223,11 +215,11 @@ export const formatPrice = (price: number): string => {
 
 export const getStatusColor = (status: Order['status']): string => {
   const colors = {
-    pending: 'bg-yellow-100 text-yellow-800',
-    processing: 'bg-blue-100 text-blue-800',
-    shipped: 'bg-purple-100 text-purple-800',
-    delivered: 'bg-green-100 text-green-800',
-    cancelled: 'bg-red-100 text-red-800',
+    PENDING: 'bg-yellow-100 text-yellow-800',
+    PROCESSING: 'bg-blue-100 text-blue-800',
+    SHIPPED: 'bg-purple-100 text-purple-800',
+    DELIVERED: 'bg-green-100 text-green-800',
+    CANCELLED: 'bg-red-100 text-red-800',
   }
-  return colors[status]
+  return colors[status] || 'bg-gray-100 text-gray-800'
 }
